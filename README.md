@@ -11,6 +11,11 @@ scripts.
 
 For more information, check out the [gearspace discussion](https://gearspace.com/board/music-computers/1221989-dante-routing-without-dante-controller-possible.html).
 
+### Differences Between Fork and Original
+
+- Use LGPL, because I think it's fair if people contribute back their enhancements. If you want to go with anything closed source, Audinate will happily sell you something.
+- feat: Enable AES67 mode
+
 ### Demo
 
 <p align="center"><img src="https://github.com/chris-ritsen/network-audio-controller/blob/master/demo/demo.gif?raw=true" alt="netctl usage demo" title="netctl usage demo"/></p>
@@ -31,6 +36,7 @@ For more information, check out the [gearspace discussion](https://gearspace.com
 
 #### Planned
 
+- Enable Multicast AES67 streams
 - Change channel/device names without affecting existing subscriptions
 - Change/display device settings (AES67 mode)
 - Client/server modes
