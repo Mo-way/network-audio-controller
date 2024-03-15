@@ -11,6 +11,7 @@ from netaudio.dante.subscription import DanteSubscription
 from netaudio.dante.const import (
     DEVICE_CONTROL_PORT,
     DEVICE_SETTINGS_PORT,
+    DEVICE_MCAST_AES67_PORT,
     FEATURE_VOLUME_UNSUPPORTED,
     PORTS,
     SERVICE_ARC,
@@ -129,6 +130,15 @@ class DanteDevice:
     async def enable_aes67(self, is_enabled: bool):
         command_enable_aes67 = self.command_enable_aes67(is_enabled=is_enabled)
         response = await self.dante_command(*command_enable_aes67)
+
+        return response
+
+    async def create_aes67_multicast(self, channels: list):
+        response = None
+        for channel in channels:
+            command_create_one_aes67_multicast_channel = self.command_create_avio_aes67_multicast_channel(int(channel))
+            print(command_create_one_aes67_multicast_channel)
+            response = await self.dante_command(*command_create_one_aes67_multicast_channel)
 
         return response
 
@@ -1091,3 +1101,57 @@ class DanteDevice:
         # Remove whitespace in string, that comes from formatting above
         command_string = "".join(command_string.split())
         return (command_string, None, DEVICE_SETTINGS_PORT)
+
+    def command_create_one_aes67_multicast_channel(self, channels: list):
+        """
+        Beta version, not tested well. I have no clue, why Dante has this
+        syntax *and* the one used in the "avio" method.
+        """
+        ## Params:
+        n_channels = 1 # Amount of channels in multicast flow that is created
+        activate_channels = [1] # or [1, 2, etc]
+        ## Intern:
+        data_len = 138 + 2 * n_channels # 0x60 for 1ch TODO: Write test as example
+        sequence_id = 0xff 
+        magic_const_for_same_channel = '02018204'
+        magic1_increases_with_total_channels_edited = 45 + n_channels # 0x26 for 1ch
+        magic2_increases_with_total_channels_edited = 21 + n_channels # 0x12 for 1ch
+        magic3_increases_with_total_channels_edited = 9 + n_channels # 0x0a for 1ch
+        magic4_increases_with_total_channels_edited = 3 + n_channels # 0x04 for 1ch
+        magic5_increases_with_total_channels_edited = 5 + n_channels # 0x06 for 1ch
+        activate_channels_string = ""
+        for ch in activate_channels:
+            activate_channels_string += f"{ch:04x}"
+        command_string = (
+            f"280900 \
+                {data_len:02x}\
+                {sequence_id:04x}260100000000\
+                {magic_const_for_same_channel}0101001414\
+                {magic1_increases_with_total_channels_edited:02x}000000000003002000000000000200000000000000000000000000000000000000000000000008\
+                {magic2_increases_with_total_channels_edited:02x}000000000000000300000000000004\
+                {magic3_increases_with_total_channels_edited:02x}000000000000\
+                {magic4_increases_with_total_channels_edited:02x}\
+                {magic5_increases_with_total_channels_edited:02x}\
+                {n_channels:04x}{activate_channels_string}000002000030"
+        )
+        command_string = "".join(command_string.split())
+
+        return (command_string, None, DEVICE_MCAST_AES67_PORT)
+
+    def command_create_avio_aes67_multicast_channel(self, channel: int):
+        # Dante Controller does multiple channels in one command, but I don't get the
+        # syntax for multiple channels. OTH single channel syntax is dead simple -> Quick n dirty
+        sequence_id = 0xff
+        # Dante Controller matches ch1 with flow2 and vice versa. No idea why. 
+        # We match ch1 flow1, because it's simpler to program
+        flow_id = channel
+        command_string = (
+            f"27 29 00 38 \
+                {sequence_id:04x} 22 01 00 00 01 01 00 10 00 00 00\
+                {flow_id:02x} 00 02 00 00 00 00 00 00 00 00 00 00 00 01 00\
+                {channel:02x} 00 24 0a 00 00 00 00 00 00 00 00 30 00 00 00 00 00 00 00 03 00 00"
+        )
+
+        command_string = "".join(command_string.split())
+
+        return (command_string, None, DEVICE_MCAST_AES67_PORT)
