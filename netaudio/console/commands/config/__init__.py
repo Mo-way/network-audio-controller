@@ -85,6 +85,12 @@ class ConfigCommand(Command):
             f"Disable AES67 mode. Reboot needed to apply",
             flag=True,
         ),
+        option(
+            "aes67-activate-multicast",
+            None,
+            f"Create AES67 multicast streams. Beta example usage: 12 to enable ch 1 and 2",
+            flag=False,
+        ),
     ]
 
     async def set_gain_level(self, device, channel_number, gain_level):
@@ -294,6 +300,11 @@ class ConfigCommand(Command):
         if self.option("aes67-disable"):
             is_enabled = False
             await device.enable_aes67(is_enabled)
+
+        if self.option("aes67-activate-multicast"):
+            channels = list(self.option("aes67-activate-multicast"))
+            await device.create_aes67_multicast(channels)
+
 
     def handle(self):
         asyncio.run(self.device_configure())
