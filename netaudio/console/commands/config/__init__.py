@@ -10,6 +10,8 @@ from cleo.helpers import option
 from netaudio.dante.browser import DanteBrowser
 from netaudio.utils import get_host_by_name
 
+import netaudio.dante.device
+
 
 def _default(self, obj):
     return getattr(obj.__class__, "to_json", _default.default)(obj)

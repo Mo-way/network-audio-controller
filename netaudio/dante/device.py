@@ -134,11 +134,9 @@ class DanteDevice:
         return response
 
     async def create_aes67_multicast(self, channels: list):
-        response = None
-        for channel in channels:
-            command_create_one_aes67_multicast_channel = self.command_create_avio_aes67_multicast_channel(int(channel))
-            print(command_create_one_aes67_multicast_channel)
-            response = await self.dante_command(*command_create_one_aes67_multicast_channel)
+        command_create_aes67_multicast_channels = self.command_create_avio_aes67_multicast_channel(channels)
+        # print(command_create_aes67_multicast_channels)
+        response = await self.dante_command(*command_create_aes67_multicast_channels)
 
         return response
 
@@ -1138,18 +1136,28 @@ class DanteDevice:
 
         return (command_string, None, DEVICE_MCAST_AES67_PORT)
 
-    def command_create_avio_aes67_multicast_channel(self, channel: int):
-        # Dante Controller does multiple channels in one command, but I don't get the
-        # syntax for multiple channels. OTH single channel syntax is dead simple -> Quick n dirty
+    def command_create_avio_aes67_multicast_channel(self, channels: list):
         sequence_id = 0xff
-        # Dante Controller matches ch1 with flow2 and vice versa. No idea why. 
-        # We match ch1 flow1, because it's simpler to program
-        flow_id = channel
+        flow_id = 1 # TODO: Check for "free" flow, not sure what happens if exists
+        channels_string = ""
+        print(channels)
+        for ch in channels:
+            channels_string += f"{int(ch):04x}"
+        channels_added = len(channels)
+        # Probaly something binary, bc 4->8 change. Need pcap w/ more than 2 channels here
+        if channels_added == 1:
+            magic_for_now = "0024"
+        else:
+            magic_for_now = "00280000"
+        data_len = int(0x34 + len(magic_for_now) / 2 + channels_added * 2)
         command_string = (
-            f"27 29 00 38 \
+            f"27 29 00\
+                {data_len:02x} \
                 {sequence_id:04x} 22 01 00 00 01 01 00 10 00 00 00\
-                {flow_id:02x} 00 02 00 00 00 00 00 00 00 00 00 00 00 01 00\
-                {channel:02x} 00 24 0a 00 00 00 00 00 00 00 00 30 00 00 00 00 00 00 00 03 00 00"
+                {flow_id:02x} 00 02 00 00 00 00 00 00 00 00 00 00 00\
+                {channels_added:02x}\
+                {channels_string}\
+                {magic_for_now} 0a 00 00 00 00 00 00 00 00 30 00 00 00 00 00 00 00 03 00 00"
         )
 
         command_string = "".join(command_string.split())
