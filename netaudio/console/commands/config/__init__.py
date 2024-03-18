@@ -203,7 +203,7 @@ class ConfigCommand(Command):
             device = list(devices.values()).pop()
         except IndexError:
             self.line("Device not found")
-            return
+            # return
 
         if self.option("reset-channel-name") or self.option("set-channel-name"):
             if self.option("channel-number"):
