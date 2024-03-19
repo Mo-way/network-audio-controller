@@ -1146,7 +1146,8 @@ class DanteDevice:
         # Dante Controller matches ch1 with flow2 and vice versa. No idea why. 
         # We match ch1 flow1, because it's simpler to program
         flow_id = channel
-        channels = [1]
+        channels = [channel]
+        channels_string = ""
         for ch in channels:
             channels_string += f"{ch:04x}"
         channels_added = len(channels)
@@ -1159,8 +1160,9 @@ class DanteDevice:
             f"27 29 00 38 \
                 {sequence_id:04x} 22 01 00 00 01 01 00 10 00 00 00\
                 {flow_id:02x} 00 02 00 00 00 00 00 00 00 00 00 00 00\
-                {channels_added:02x} 00\
-                {channels_string} {magic_for_now} 0a 00 00 00 00 00 00 00 00 30 00 00 00 00 00 00 00 03 00 00"
+                {channels_added:02x}\
+                {channels_string}\
+                {magic_for_now} 0a 00 00 00 00 00 00 00 00 30 00 00 00 00 00 00 00 03 00 00"
         )
 
         command_string = "".join(command_string.split())

@@ -22,3 +22,7 @@ def test_command_create_avio_aes67_multicast_channel():
     got = some_dev.command_create_avio_aes67_multicast_channel(2)
     want = ('2729003800ff2201000001010010000000020002000000000000000000000001000200240a00000000000000003000000000000000030000', None, 4440)
     assert got == want
+    
+    got = some_dev.command_create_avio_aes67_multicast_channel(2)
+    want = ('2729003800ff2201000001010010000000020002000000000000000000000001000200240a00000000000000003000000000000000030000', None, 4440)
+    assert got == want
