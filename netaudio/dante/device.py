@@ -1158,8 +1158,10 @@ class DanteDevice:
             magic_for_now = "0024"
         else:
             magic_for_now = "00280000"
+        data_len = int(0x34 + len(magic_for_now) / 2 + channels_added * 2)
         command_string = (
-            f"27 29 00 38\
+            f"27 29 00\
+                {data_len:02x} \
                 {sequence_id:04x} 22 01 00 00 01 01 00 10 00 00 00\
                 {flow_id:02x} 00 02 00 00 00 00 00 00 00 00 00 00 00\
                 {channels_added:02x}\
