@@ -51,6 +51,9 @@ class DanteDevice:
         return f"{self.name}"
 
     def dante_command_new(self, command, control):
+        """ 
+        This seems like a method for developing new commands
+        """
         response = None
 
         binary_str = codecs.decode(command, "hex")
@@ -115,7 +118,7 @@ class DanteDevice:
 
         return response
 
-    async def set_latency(self, latency):
+    async def set_latency(self, latency: int):
         response = await self.dante_command(*self.command_set_latency(latency))
 
         return response
@@ -340,6 +343,7 @@ class DanteDevice:
             traceback.print_exc()
 
     async def get_volume(self, ipv4, mac, port):
+        # Used nowhere??
         try:
             if self.software or (self.model_id in FEATURE_VOLUME_UNSUPPORTED):
                 return
@@ -807,7 +811,7 @@ class DanteDevice:
             command_args = "0000"
         if command == "set_name":
             command_str = "1001"
-
+        # TODO: Y do u hate testable code? Y?
         sequence2 = random.randint(0, 65535)
         sequence_id = f"{sequence2:04x}"
 
@@ -821,7 +825,7 @@ class DanteDevice:
 
         return command_hex
 
-    def get_name_lengths(self, device_name):
+    def get_name_lengths(self, device_name: str):
         name_len = len(device_name)
         offset = (name_len & 1) - 2
         padding = 10 - (name_len + offset)
@@ -832,18 +836,21 @@ class DanteDevice:
         return (name_len1, name_len2, name_len3)
 
     def command_make_model(self, mac):
+        # Used nowhere??
         cmd_args = "00c100000000"
         command_string = f"ffff00200fdb0000{mac}0000417564696e6174650731{cmd_args}"
 
         return command_string
 
     def command_dante_model(self, mac):
+        # Used nowhere??
         cmd_args = "006100000000"
         command_string = f"ffff00200fdb0000{mac}0000417564696e6174650731{cmd_args}"
 
         return command_string
 
     def command_volume_start(self, device_name, ipv4, mac, port, timeout=True):
+        # Used nowhere??
         data_len = 0
         device_name_hex = device_name.encode().hex()
         ip_hex = ipv4.packed.hex()
@@ -866,6 +873,7 @@ class DanteDevice:
         return (command_string, None, DEVICE_CONTROL_PORT)
 
     def command_volume_stop(self, device_name, ipv4, mac, port):
+        # Used nowhere??
         data_len = 0
         device_name_hex = device_name.encode().hex()
         ip_hex = ipaddress.IPv4Address(0).packed.hex()
@@ -914,7 +922,8 @@ class DanteDevice:
 
         return (command_string, None, DEVICE_SETTINGS_PORT)
 
-    def command_set_encoding(self, encoding):
+    def command_set_encoding(self, encoding: int):
+        """ param encoding in [16, 24, 32]. TODO: should be an enum """
         data_len = 40
 
         command_string = f"ffff00{data_len}03d700005254000000000000417564696e617465072700830000006400000001000000{encoding:02x}"
@@ -1140,7 +1149,6 @@ class DanteDevice:
         sequence_id = 0xff
         flow_id = 1 # TODO: Check for "free" flow, not sure what happens if exists
         channels_string = ""
-        print(channels)
         for ch in channels:
             channels_string += f"{int(ch):04x}"
         channels_added = len(channels)
