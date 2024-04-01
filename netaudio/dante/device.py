@@ -123,7 +123,7 @@ class DanteDevice:
 
         return response
 
-    async def set_gain_level(self, channel_number, gain_level, device_type):
+    async def set_gain_level(self, channel_number: int, gain_level: int, device_type: str):
         response = await self.dante_command(
             *self.command_set_gain_level(channel_number, gain_level, device_type)
         )
@@ -930,7 +930,8 @@ class DanteDevice:
 
         return (command_string, None, DEVICE_SETTINGS_PORT)
 
-    def command_set_gain_level(self, channel_number, gain_level, device_type):
+    def command_set_gain_level(self, channel_number: int, gain_level: int, device_type: str):
+        """ param ch_no """
         data_len = 52
 
         if device_type == "input":
@@ -942,7 +943,8 @@ class DanteDevice:
 
         return (command_string, None, DEVICE_SETTINGS_PORT)
 
-    def command_set_sample_rate(self, sample_rate):
+    def command_set_sample_rate(self, sample_rate: int):
+        """ param samplerate: See `options_rate` in CLI for allowed values """
         data_len = 40
 
         command_string = f"ffff00{data_len:02x}03d400005254000000000000417564696e61746507270081000000640000000100{sample_rate:06x}"
@@ -950,7 +952,7 @@ class DanteDevice:
         return (command_string, None, DEVICE_SETTINGS_PORT)
 
     def command_add_subscription(
-        self, rx_channel_number, tx_channel_name, tx_device_name
+        self, rx_channel_number: int, tx_channel_name: str, tx_device_name: str
     ):
         rx_channel_hex = f"{int(rx_channel_number):02x}"
         command_str = "3010"
@@ -969,7 +971,7 @@ class DanteDevice:
             SERVICE_ARC,
         )
 
-    def command_remove_subscription(self, rx_channel):
+    def command_remove_subscription(self, rx_channel: int):
         rx_channel_hex = f"{int(rx_channel):02x}"
         command_str = "3014"
         args_length = "10"
@@ -986,6 +988,7 @@ class DanteDevice:
         )
 
     def command_device_info(self):
+        # Used nowhere??
         return (self.command_string("device_info"), SERVICE_ARC)
 
     def command_device_name(self):
@@ -994,7 +997,7 @@ class DanteDevice:
     def command_channel_count(self):
         return (self.command_string("channel_count"), SERVICE_ARC)
 
-    def command_set_name(self, name):
+    def command_set_name(self, name: str):
         args_length = chr(len(name.encode("utf-8")) + 11)
         args_length = bytes(args_length.encode("utf-8")).hex()
 
@@ -1010,7 +1013,7 @@ class DanteDevice:
     def command_reset_name(self):
         return (self.command_string("reset_name"), SERVICE_ARC)
 
-    def command_reset_channel_name(self, channel_type, channel_number):
+    def command_reset_channel_name(self, channel_type: str, channel_number: int):
         channel_hex = f"{channel_number:02x}"
 
         if channel_type == "rx":
