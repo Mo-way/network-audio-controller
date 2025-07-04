@@ -1133,8 +1133,8 @@ class DanteDevice:
         for ch in activate_channels:
             activate_channels_string += f"{ch:04x}"
         command_string = (
-            f"280900 \
-                {data_len:02x}\
+            f"2809 \
+                {data_len:04x}\
                 {sequence_id:04x}260100000000\
                 {magic_const_for_same_channel}0101001414\
                 {magic1_increases_with_total_channels_edited:02x}000000000003002000000000000200000000000000000000000000000000000000000000000008\
@@ -1162,8 +1162,8 @@ class DanteDevice:
             magic_for_now = "00280000"
         data_len = int(0x34 + len(magic_for_now) / 2 + channels_added * 2)
         command_string = (
-            f"27 29 00\
-                {data_len:02x} \
+            f"27 29\
+                {data_len:04x} \
                 {sequence_id:04x} 22 01 00 00 01 01 00 10 00 00 00\
                 {flow_id:02x} 00 02 00 00 00 00 00 00 00 00 00 00 00\
                 {channels_added:02x}\
