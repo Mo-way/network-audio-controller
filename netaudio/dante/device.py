@@ -1116,32 +1116,33 @@ class DanteDevice:
         """
         Beta version, not tested well. I have no clue, why Dante has this
         syntax *and* the one used in the "avio" method.
+
+        There are multiple commands sent, but only the first one with length of 110 bytes
+        is interesting, because the other ones are sent _after_ the SAP was broadcast
         """
-        ## Params:
-        n_channels = 1 # Amount of channels in multicast flow that is created
-        activate_channels = [1] # or [1, 2, etc]
+        n_channels = len(channels) # Amount of channels in new multicast flow
         ## Intern:
         data_len = 138 + 2 * n_channels # 0x60 for 1ch TODO: Write test as example
         sequence_id = 0xff 
-        magic_const_for_same_channel = '02018204'
-        magic1_increases_with_total_channels_edited = 45 + n_channels # 0x26 for 1ch
-        magic2_increases_with_total_channels_edited = 21 + n_channels # 0x12 for 1ch
-        magic3_increases_with_total_channels_edited = 9 + n_channels # 0x0a for 1ch
-        magic4_increases_with_total_channels_edited = 3 + n_channels # 0x04 for 1ch
-        magic5_increases_with_total_channels_edited = 5 + n_channels # 0x06 for 1ch
+        magic0 = '0000'  # changes, when not starting w/ ch1
+        magic_per_hw = "a"  # Was 8 in another capture
+        # For some reason 5 values that simply increase w/ channel count
+        magic1 = 49 + n_channels # 0x2a for 1ch -> or 26, depends on hw
+        magic2 = 23 + n_channels # 0x14 for 1ch -> or 12, depends on hardware
         activate_channels_string = ""
-        for ch in activate_channels:
+        for ch in channels:
             activate_channels_string += f"{ch:04x}"
         command_string = (
             f"2809 \
                 {data_len:04x}\
-                {sequence_id:04x}260100000000\
-                {magic_const_for_same_channel}0101001414\
-                {magic1_increases_with_total_channels_edited:02x}000000000003002000000000000200000000000000000000000000000000000000000000000008\
-                {magic2_increases_with_total_channels_edited:02x}000000000000000300000000000004\
-                {magic3_increases_with_total_channels_edited:02x}000000000000\
-                {magic4_increases_with_total_channels_edited:02x}\
-                {magic5_increases_with_total_channels_edited:02x}\
+                {sequence_id:04x}2601 0000 0000\
+                {magic0}0101001416\
+                {magic1:02x}00000000000300200000000000020000000000000000000000000000000000000000000000000\
+                {magic_per_hw}\
+                {magic2:02x}000000000000000300000000000004\
+                {9 + n_channels:02x}000000000000\
+                {3 + n_channels:02x}\
+                {5 + n_channels:02x}\
                 {n_channels:04x}{activate_channels_string}000002000030"
         )
         command_string = "".join(command_string.split())
