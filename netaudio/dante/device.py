@@ -137,7 +137,8 @@ class DanteDevice:
         return response
 
     async def create_aes67_multicast(self, channels: list):
-        command_create_aes67_multicast_channels = self.command_create_avio_aes67_multicast_channel(channels)
+        # command_create_aes67_multicast_channels = self.command_create_avio_aes67_multicast_channel(channels)
+        command_create_aes67_multicast_channels = self.command_create_one_aes67_multicast_channel(channels)
         # print(command_create_aes67_multicast_channels)
         response = await self.dante_command(*command_create_aes67_multicast_channels)
 
