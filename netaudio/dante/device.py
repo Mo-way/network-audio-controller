@@ -1119,29 +1119,32 @@ class DanteDevice:
         syntax *and* the one used in the "avio" method.
 
         There are multiple commands sent, but only the first one with length of 110 bytes
-        is interesting, because the other ones are sent _after_ the SAP was broadcast
+        is interesting, because the other ones are sent _after_ the SAP was broadcast.
+
+        Currently only supports setting from 1 onwards (i.e. 1, 1,2, 1,2,3 etc.)
         """
         n_channels = len(channels) # Amount of channels in new multicast flow
         ## Intern:
-        data_len = 138 + 2 * n_channels # 0x60 for 1ch TODO: Write test as example
+        data_len = 102 + 2 * n_channels # 0x60 for 1ch TODO: Write test as example
         sequence_id = 0xff 
         magic0 = '0000'  # changes, when not starting w/ ch1
-        magic_per_hw = "a"  # Was 8 in another capture
+        magic_per_hw = "0a"  # Was 8 in another capture
         # For some reason 5 values that simply increase w/ channel count
-        magic1 = 49 + n_channels # 0x2a for 1ch -> or 26, depends on hw
-        magic2 = 23 + n_channels # 0x14 for 1ch -> or 12, depends on hardware
+        magic1 = 41 + n_channels # 0x2a for 1ch -> or 26, depends on hw
+        magic2 = 19 + n_channels # 0x14 for 1ch -> or 12, depends on hardware
         activate_channels_string = ""
         for ch in channels:
             activate_channels_string += f"{ch:04x}"
+        # First 12*0 was also 8, later ones have 8 zeroes added. No clue
         command_string = (
             f"2809 \
                 {data_len:04x}\
-                {sequence_id:04x}2601 0000 0000\
+                {sequence_id:04x}2601{12*'0'}\
                 {magic0}0101001416\
-                {magic1:02x}00000000000300200000000000020000000000000000000000000000000000000000000000000\
+                {magic1:02x}{8*'0'}0003002{12*'0'}2{56*'0'}\
                 {magic_per_hw}\
-                {magic2:02x}000000000000000300000000000004\
-                {9 + n_channels:02x}000000000000\
+                {magic2:02x}{12*'0'}0003{20*'0'}04\
+                {9 + n_channels:02x}{12*'0'}\
                 {3 + n_channels:02x}\
                 {5 + n_channels:02x}\
                 {n_channels:04x}{activate_channels_string}000002000030"
