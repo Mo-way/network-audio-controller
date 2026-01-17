@@ -136,11 +136,10 @@ class DanteDevice:
 
         return response
 
-    async def create_aes67_multicast(self, channels: list):
-        # command_create_aes67_multicast_channels = self.command_create_avio_aes67_multicast_channel(channels)
-        command_create_aes67_multicast_channels = self.command_create_one_aes67_multicast_channel(channels)
-        # print(command_create_aes67_multicast_channels)
-        response = await self.dante_command(*command_create_aes67_multicast_channels)
+    async def create_aes67_multicast(self, channels: list[int]):
+        # command_create_aes67_multicast_channels = self.command_create_avio_aes67_multicast_channel(int_ch)
+        command_create_aes67_mc = self.command_create_one_aes67_multicast_channel(channels)
+        response = await self.dante_command(*command_create_aes67_mc)
 
         return response
 
@@ -1113,7 +1112,7 @@ class DanteDevice:
         command_string = "".join(command_string.split())
         return (command_string, None, DEVICE_SETTINGS_PORT)
 
-    def command_create_one_aes67_multicast_channel(self, channels: list):
+    def command_create_one_aes67_multicast_channel(self, channels: list[int]):
         """
         Beta version, not tested well. I have no clue, why Dante has this
         syntax *and* the one used in the "avio" method.
@@ -1134,7 +1133,7 @@ class DanteDevice:
         magic2 = 19 + n_channels # 0x14 for 1ch -> or 12, depends on hardware
         activate_channels_string = ""
         for ch in channels:
-            activate_channels_string += f"{ch:04x}"
+            activate_channels_string += f"{int(ch):04x}"
         # First 12*0 was also 8, later ones have 8 zeroes added. No clue
         command_string = (
             f"2809 \
@@ -1153,7 +1152,7 @@ class DanteDevice:
 
         return (command_string, None, DEVICE_MCAST_AES67_PORT)
 
-    def command_create_avio_aes67_multicast_channel(self, channels: list):
+    def command_create_avio_aes67_multicast_channel(self, channels: list[int]):
         sequence_id = 0xff
         flow_id = 1 # TODO: Check for "free" flow, not sure what happens if exists
         channels_string = ""

@@ -90,7 +90,7 @@ class ConfigCommand(Command):
         option(
             "aes67-activate-multicast",
             None,
-            f"Create AES67 multicast streams. Beta example usage: 12 to enable ch 1 and 2",
+            f"[BETA] Create AES67 multicast streams. Usage: quaoted, space separated channels (e.g. '1 2')",
             flag=False,
         ),
     ]
@@ -205,7 +205,8 @@ class ConfigCommand(Command):
             device = list(devices.values()).pop()
         except IndexError:
             self.line("Device not found")
-            return
+            device = netaudio.dante.device.DanteDevice()
+            # return
 
         if self.option("reset-channel-name") or self.option("set-channel-name"):
             if self.option("channel-number"):
@@ -304,8 +305,14 @@ class ConfigCommand(Command):
             await device.enable_aes67(is_enabled)
 
         if self.option("aes67-activate-multicast"):
-            channels = list(self.option("aes67-activate-multicast"))
-            await device.create_aes67_multicast(channels)
+            channels = self.option("aes67-activate-multicast").split(" ")
+            try:
+                int_channels = [int(ch) for ch in channels]
+            except ValueError as e:
+                self.line(f"Unable to parse a channel list from {channels}.\nException: {e}")
+                return
+
+            await device.create_aes67_multicast(int_channels)
 
 
     def handle(self):
