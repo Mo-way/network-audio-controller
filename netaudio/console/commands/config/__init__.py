@@ -12,13 +12,22 @@ from netaudio.utils import get_host_by_name
 
 import netaudio.dante.device
 
+def _chunker(seq, size):
+    """https://stackoverflow.com/a/434328/ itertools.batched for python <3.12
+    
+    Modification to return a tuple with index
+    """
+    return ((int(pos/size), seq[pos:pos + size]) for pos in range(0, len(seq), size))
+
 
 def _default(self, obj):
     return getattr(obj.__class__, "to_json", _default.default)(obj)
 
 
+
 _default.default = JSONEncoder().default
 JSONEncoder.default = _default
+
 
 
 class ConfigCommand(Command):
@@ -94,6 +103,18 @@ class ConfigCommand(Command):
             flag=False,
         ),
     ]
+
+    def _parse_aes67_channels(self, cli_input: str) -> tuple[list[int]]:
+        """CLI input should be simple. But to Dante we need to send
+        chunks of 8 channels with different rtp identifiers."""
+        channels = cli_input.split(" ")
+        try:
+            int_channels = [int(ch) for ch in channels]
+        except ValueError as e:
+            self.line(f"Unable to parse a channel list from {channels}.\nException: {e}")
+            return []
+        max_ch_per_rtp_stream = 8
+        return _chunker(int_channels, max_ch_per_rtp_stream)
 
     async def set_gain_level(self, device, channel_number, gain_level):
         device_type = None
@@ -305,14 +326,10 @@ class ConfigCommand(Command):
             await device.enable_aes67(is_enabled)
 
         if self.option("aes67-activate-multicast"):
-            channels = self.option("aes67-activate-multicast").split(" ")
-            try:
-                int_channels = [int(ch) for ch in channels]
-            except ValueError as e:
-                self.line(f"Unable to parse a channel list from {channels}.\nException: {e}")
-                return
-
-            await device.create_aes67_multicast(int_channels)
+            chunks = self._parse_aes67_channels(self.option("aes67-activate-multicast"))
+            for stream_id, channels in chunks:
+                self.line(f"Creating RTP stream {32 - stream_id} with channels {channels}")
+                await device.create_aes67_multicast(channels, 32 - stream_id)
 
 
     def handle(self):

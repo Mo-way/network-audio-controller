@@ -136,9 +136,9 @@ class DanteDevice:
 
         return response
 
-    async def create_aes67_multicast(self, channels: list[int]):
+    async def create_aes67_multicast(self, channels: list[int], stream_id: int):
         # command_create_aes67_multicast_channels = self.command_create_avio_aes67_multicast_channel(int_ch)
-        command_create_aes67_mc = self.command_create_one_aes67_multicast_channel(channels)
+        command_create_aes67_mc = self.command_create_one_aes67_multicast_channel(channels, stream_id)
         response = await self.dante_command(*command_create_aes67_mc)
 
         return response
@@ -1112,15 +1112,17 @@ class DanteDevice:
         command_string = "".join(command_string.split())
         return (command_string, None, DEVICE_SETTINGS_PORT)
 
-    def command_create_one_aes67_multicast_channel(self, channels: list[int]):
+    def command_create_one_aes67_multicast_channel(self, channels: list[int], rtp_stream: int = 32):
         """
         Beta version, not tested well. I have no clue, why Dante has this
         syntax *and* the one used in the "avio" method.
 
-        There are multiple commands sent, but only the first one with length of 110 bytes
-        is interesting, because the other ones are sent _after_ the SAP was broadcast.
+        There are multiple commands sent, focusing on the first one with length of 110 bytes,
+        because the other ones are sent _after_ the SAP was broadcast.
 
-        Currently only supports setting from 1 onwards (i.e. 1, 1,2, 1,2,3 etc.)
+        Parameters:
+        - channels: list of max 8 channels
+        - rtp_stream: Identifier of the RTP stream being created
         """
         n_channels = len(channels) # Amount of channels in new multicast flow
         ## Intern:
@@ -1140,7 +1142,8 @@ class DanteDevice:
                 {data_len:04x}\
                 {sequence_id:04x}2601{12*'0'}\
                 {magic0}0101001416\
-                {magic1:02x}{8*'0'}0003002{12*'0'}2{56*'0'}\
+                {magic1:02x}{8*'0'}000300\
+                {rtp_stream:02x}{8*'0'}0002{56*'0'}\
                 {magic_per_hw}\
                 {magic2:02x}{12*'0'}0003{20*'0'}04\
                 {9 + n_channels:02x}{12*'0'}\
@@ -1175,6 +1178,6 @@ class DanteDevice:
                 {magic_for_now} 0a 00 00 00 00 00 00 00 00 30 00 00 00 00 00 00 00 03 00 00"
         )
 
-        command_string = "".join(command_string.split())
+        command_string = "".join(command_string.split())  # remove spaces
 
         return (command_string, None, DEVICE_MCAST_AES67_PORT)

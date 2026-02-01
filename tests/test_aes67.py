@@ -1,6 +1,7 @@
 import netaudio.dante.device
 import pytest
 
+
 @pytest.fixture()
 def dante_device():
     return netaudio.dante.device.DanteDevice()
@@ -59,5 +60,3 @@ def test_command_create_one_aes67_multicast_channel(dante_device):
     # TODO: not yet implemented, need more captures to know 
     # wan82 = "2809007600ff260100000000000100000101001416310000000000030020000000000002000000000000000000000000000000000000000000000000000000000a1b00000000000000030000000000000000000004110000000000000b0d00080002000400060008000a000c000e0010000002000030"
     # assert wan82 == go82[0]
-
-
